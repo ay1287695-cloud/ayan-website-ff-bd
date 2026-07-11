@@ -1,0 +1,689 @@
+#!/usr/bin/env python3
+import os
+from flask import Flask, render_template_string
+
+app = Flask(__name__)
+
+VISIT_FILE = "visits.txt"
+
+def get_and_increment_visits():
+    # এস্তাবলিশড বেস কাউন্ট হিসেবে ১০৪২ থেকে শুরু হবে
+    count = 1042  
+    try:
+        if os.path.exists(VISIT_FILE):
+            with open(VISIT_FILE, "r") as f:
+                count = int(f.read().strip())
+        count += 1
+        with open(VISIT_FILE, "w") as f:
+            f.write(str(count))
+    except Exception:
+        pass
+    return count
+
+# VIP App Gallery HTML with Falling Petals, Server-side Counter, Telemetry, and Ultra Glow
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aʏᴀɴ Gᴀʟʟᴇʀʏ - VIP Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Orbitron:wght@700;900&family=Syne:wght@800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --p:#00ffe7;--p2:#00c9b1;--p3:#7fffd4;
+  --g1:#ff6ec7;--g2:#c026d3;
+  --acc:#ffd700;--acc2:#ffe066;
+  --dark:#02000a;--card:rgba(10, 5, 28, 0.75);
+  --brd:rgba(0,255,231,.28);--txt:#d6fff9;--dim:#7aa8a0;
+  --success:#00ff88;--err:#ff4466;
+  --glow: rgba(0, 255, 231, 0.5);
+}
+body{font-family:'Space Grotesk',sans-serif;background:var(--dark);min-height:100vh;overflow-x:hidden;position:relative;color:var(--txt)}
+
+/* Color Themes Definitions */
+body.theme-cyan {
+  --p:#00ffe7; --p2:#00c9b1; --p3:#7fffd4;
+  --g1:#ff6ec7; --g2:#c026d3;
+  --glow: rgba(0, 255, 231, 0.55);
+}
+body.theme-magenta {
+  --p:#ff007f; --p2:#d2006b; --p3:#ff66b2;
+  --g1:#00ffe7; --g2:#00c9b1;
+  --glow: rgba(255, 0, 127, 0.55);
+}
+body.theme-gold {
+  --p:#ffd700; --p2:#cca100; --p3:#ffeb66;
+  --g1:#ff4500; --g2:#cc3700;
+  --glow: rgba(255, 215, 0, 0.55);
+}
+body.theme-purple {
+  --p:#a855f7; --p2:#7e22ce; --p3:#c084fc;
+  --g1:#3b82f6; --g2:#1d4ed8;
+  --glow: rgba(168, 85, 247, 0.55);
+}
+
+/* Beautiful Interactive Falling Petals Canvas Background */
+#galaxy-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, #08031a 0%, #010006 100%);
+}
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08)2px,rgba(0,0,0,.08)4px);}
+
+.shell{position:relative;z-index:2;max-width:1200px;margin:0 auto;padding:1.2rem 1rem 3rem}
+
+/* Theme Switcher Widget */
+.theme-switcher{display:flex;justify-content:flex-end;gap:.5rem;margin-bottom:1rem;align-items:center}
+.theme-lbl{font-family:'Orbitron',sans-serif;font-size:.65rem;color:var(--dim);letter-spacing:1px;text-transform:uppercase}
+.t-btn{width:22px;height:22px;border-radius:50%;border:2px solid #fff;cursor:pointer;transition:transform .2s;}
+.t-btn:hover{transform:scale(1.2)}
+.t-cyan{background:#00ffe7}
+.t-magenta{background:#ff007f}
+.t-gold{background:#ffd700}
+.t-purple{background:#a855f7}
+
+/* Dynamic BGM Player */
+.music-bar{display:flex;align-items:center;gap:.8rem;background:rgba(255,110,199,.05);border:1px solid var(--brd);border-radius:1rem;padding:.7rem 1.2rem;margin-bottom:2rem;box-shadow:0 0 24px var(--glow);position:relative;overflow:hidden;}
+.music-bar::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--p),var(--g1),var(--p),transparent);opacity:.45}
+.mdisc{font-size:1.1rem;color:var(--p);flex-shrink:0;animation:discSpin 4s linear infinite}
+.mdisc.paused{animation-play-state:paused}
+@keyframes discSpin{to{transform:rotate(360deg)}}
+.meq{display:flex;align-items:flex-end;gap:2px;height:18px;flex-shrink:0}
+.meq span{display:inline-block;width:3px;background:linear-gradient(0deg,var(--g2),var(--p),var(--p3));border-radius:2px;animation:eq .7s ease-in-out infinite alternate}
+.meq span:nth-child(1){height:5px;animation-delay:0s}
+.meq span:nth-child(2){height:13px;animation-delay:.1s}
+.meq span:nth-child(3){height:8px;animation-delay:.2s}
+.meq span:nth-child(4){height:15px;animation-delay:.05s}
+.meq span:nth-child(5){height:6px;animation-delay:.15s}
+.meq.paused span{animation-play-state:paused;opacity:.3}
+@keyframes eq{from{transform:scaleY(.2)}to{transform:scaleY(1)}}
+.minfo{flex:1;overflow:hidden}
+.mtitle{font-family:'Orbitron',sans-serif;font-size:.7rem;letter-spacing:1.5px;color:var(--p);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msub{font-size:.63rem;color:var(--dim);letter-spacing:1px;margin-top:.15rem}
+.mbtn{background:linear-gradient(135deg,rgba(0,255,231,.12),rgba(255,110,199,.08));border:1px solid rgba(0,255,231,.3);border-radius:.6rem;color:var(--p);padding:.4rem .9rem;cursor:pointer;transition:all .2s;flex-shrink:0;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.68rem;letter-spacing:1px;display:flex;align-items:center;gap:.4rem;}
+.mbtn:hover{background:rgba(0,255,231,.2);box-shadow:0 0 15px rgba(0,255,231,.3)}
+
+/* Ultra Premium Glowing VIP Profile Card */
+.vip-card {
+  background: linear-gradient(135deg, rgba(12, 6, 36, 0.85), rgba(4, 2, 14, 0.95));
+  border: 2px solid var(--brd);
+  border-radius: 2rem;
+  padding: 2.5rem;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8), 0 0 30px var(--glow);
+  position: relative;
+  overflow: hidden;
+  max-width: 580px;
+  margin: 0 auto 2.5rem;
+}
+.vip-card::before {
+  content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+  background: radial-gradient(circle, rgba(0,255,231,0.05) 0%, transparent 60%);
+  pointer-events: none;
+}
+.vip-head {
+  display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; z-index: 2;
+}
+
+.profile-wrap{width:200px;height:190px;position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:1rem}
+.profile-inner{width:120px;height:120px;border-radius:50%;overflow:hidden;position:relative;z-index:5;background:linear-gradient(135deg,rgba(0,255,231,.15),rgba(255,110,199,.15));display:flex;align-items:center;justify-content:center;box-shadow:0 0 25px var(--glow)}
+.profile-inner img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.pico-owner { font-size: 3rem; background: linear-gradient(135deg, var(--p), var(--g1)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+/* Real Realistic Triple Orbit Rings (VIP Pro Setup) */
+.orbit-ring { position: absolute; border-radius: 50%; pointer-events: none; transition: border-color 0.5s; }
+.ring-1 {
+    width: 150px; height: 156px; z-index: 2;
+    border: 1.5px solid var(--p);
+    animation: rotateClockwise 8s linear infinite;
+    filter: drop-shadow(0 0 5px var(--p));
+}
+/* Inner Satellite Orbit Dot */
+.ring-1::before {
+    content: "";
+    position: absolute;
+    width: 8px; height: 8px;
+    background: var(--p);
+    border-radius: 50%;
+    top: -4px; left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 0 10px var(--p), 0 0 20px var(--p);
+}
+.ring-2 {
+    width: 172px; height: 172px; z-index: 1;
+    border: 2px dashed var(--g1);
+    animation: rotateCounterClockwise 12s linear infinite;
+    filter: drop-shadow(0 0 8px var(--g1));
+}
+.ring-3 {
+    width: 194px; height: 194px; z-index: 0;
+    border: 1.5px solid var(--acc);
+    animation: breatheOuter 4s ease-in-out infinite alternate;
+    filter: drop-shadow(0 0 6px var(--acc));
+}
+
+@keyframes rotateClockwise {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+@keyframes rotateCounterClockwise {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+}
+@keyframes breatheOuter {
+    0% { transform: scale(0.96); opacity: 0.5; }
+    100% { transform: scale(1.04); opacity: 1; }
+}
+
+/* VIP Member Info layout */
+.vip-title {
+  font-family: 'Orbitron', sans-serif; font-size: 1.6rem; font-weight: 900; letter-spacing: 2px;
+  background: linear-gradient(90deg, #fff, var(--p), #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 10px var(--glow); margin-bottom: 0.2rem;
+}
+.vip-sub {
+  font-family: 'Orbitron', sans-serif; font-size: 0.65rem; color: var(--acc2); letter-spacing: 2px; margin-bottom: 1.5rem; text-transform: uppercase;
+}
+
+.vip-details-box {
+  width: 100%; border-top: 1px solid rgba(0, 255, 231, 0.15); padding-top: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem;
+}
+.vip-row {
+  display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #bbfef7;
+}
+.vip-lbl {
+  color: var(--dim); font-family: 'Orbitron', sans-serif; font-size: 0.68rem; letter-spacing: 1px; display: flex; align-items: center; gap: 0.4rem;
+}
+.vip-val {
+  font-weight: 700; color: #fff; font-family: 'Space Grotesk', sans-serif; text-shadow: 0 0 4px var(--glow);
+}
+
+/* System Telemetry Monitoring Panel (Charge, Date, Time, OS) */
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+.telemetry-card {
+  background: rgba(12, 6, 36, 0.45);
+  border: 1px solid rgba(0, 255, 231, 0.08);
+  border-radius: 1rem;
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  transition: border-color 0.5s, transform 0.3s;
+}
+.telemetry-card:hover {
+  border-color: var(--p);
+  transform: translateY(-3px);
+}
+.tel-ico {
+  font-size: 1.1rem;
+  color: var(--p);
+  margin-bottom: 0.4rem;
+  transition: color 0.5s;
+}
+.tel-lbl {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.58rem;
+  letter-spacing: 1px;
+  color: var(--dim);
+  text-transform: uppercase;
+  margin-bottom: 0.2rem;
+}
+.tel-val {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--txt);
+}
+
+/* App Showcase Card Styles */
+.card{background:var(--card);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--brd);border-radius:1.6rem;padding:2rem;position:relative;overflow:hidden;transition:all .3s;box-shadow:0 8px 40px rgba(0,0,0,.7),inset 0 1px 0 rgba(0,255,231,.06);margin-bottom:1.8rem}
+.card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--p),var(--g1),var(--acc),var(--p),transparent);opacity:.55}
+.card:hover{border-color:rgba(0,255,231,.45);box-shadow:0 15px 40px var(--glow)}
+
+.app-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:2rem}
+.app-card{background:var(--card);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--brd);border-radius:1.6rem;padding:2rem;position:relative;overflow:hidden;transition:all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);box-shadow:0 8px 40px rgba(0,0,0,.7),inset 0 1px 0 rgba(0,255,231,.06);display:flex;flex-direction:column;justify-content:space-between}
+.app-card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--p),var(--g1),var(--p),transparent);opacity:.55}
+.app-card:hover{border-color:rgba(0,255,231,.42);transform:translateY(-8px);box-shadow:0 15px 40px var(--glow)}
+
+.app-header{display:flex;align-items:center;gap:1.2rem;margin-bottom:1.5rem}
+.app-icon{width:64px;height:64px;border-radius:1.1rem;flex-shrink:0;background:linear-gradient(135deg,rgba(0,255,231,.12),rgba(255,110,199,.1));border:1px solid rgba(0,255,231,.25);display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:var(--p);transition: color 0.5s, border-color 0.5s;}
+.app-details{flex:1}
+.app-title{font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:700;color:var(--txt);letter-spacing:1.5px;text-transform:uppercase}
+
+.app-desc{font-size:.85rem;color:#bbfef7;line-height:1.6;margin-bottom:1.5rem;flex:1}
+.app-features{list-style:none;margin-bottom:1.8rem;display:flex;flex-direction:column;gap:.5rem}
+.app-features li{font-size:.78rem;color:var(--dim);display:flex;align-items:center;gap:.5rem}
+.app-features li i{color:var(--p);font-size:.8rem;transition: color 0.5s;}
+
+.app-btn{width:100%;padding:.85rem;border-radius:.75rem;border:none;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:.75rem;letter-spacing:1.5px;text-transform:uppercase;display:inline-flex;align-items:center;justify-content:center;gap:.6rem;font-weight:700;text-decoration:none;transition:all .25s}
+.app-btn-live{background:linear-gradient(135deg,#006655,var(--p2));color:var(--dark);box-shadow:0 4px 20px rgba(0,255,231,.35)}
+.app-btn-live:hover{background:linear-gradient(135deg,var(--p),var(--p3));box-shadow:0 6px 28px var(--glow);transform:translateY(-2px)}
+
+/* Coming Soon Style Card */
+.coming-soon{border-color:rgba(255,110,199,.15);background:rgba(15, 8, 42, 0.45)}
+.coming-soon::before{background:linear-gradient(90deg,transparent,var(--g1),transparent);opacity:.35}
+.coming-soon .app-icon{color:var(--g1);background:linear-gradient(135deg,rgba(255,110,199,.08),rgba(192,38,211,.05));border-color:rgba(255,110,199,.2)}
+.coming-soon .app-features li i{color:var(--g1)}
+.app-btn-soon{background:rgba(255,110,199,.05);border:1px solid rgba(255,110,199,.2);color:var(--g1);cursor:not-allowed}
+
+.divider{border:none;border-top:1px solid rgba(0,255,231,.08);margin:3.5rem 0 2rem}
+.foot{text-align:center;color:var(--dim);font-size:.76rem;letter-spacing:1.5px;font-family:'Orbitron',sans-serif;padding:.5rem}
+.foot span{background:linear-gradient(90deg,var(--p),var(--g1));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+/* Toast Message */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;background:rgba(3,13,11,.96);border-radius:.8rem;padding:.85rem 1.2rem;font-family:'Orbitron',sans-serif;font-size:.7rem;letter-spacing:1px;display:flex;align-items:center;gap:.7rem;max-width:320px;box-shadow:0 8px 30px rgba(0,0,0,.6);animation:toastIn .3s ease;border:1px solid rgba(0,255,231,.15);border-left:3px solid var(--p);color:var(--p)}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+</style>
+</head>
+<body class="theme-cyan">
+<canvas id="galaxy-canvas"></canvas>
+<audio id="bgAudio" loop><source src="/static/music.mp3" type="audio/mpeg"></audio>
+
+<div class="shell">
+
+  <!-- Dynamic Theme Changer Panel -->
+  <div class="theme-switcher">
+    <span class="theme-lbl">Theme Switcher:</span>
+    <button class="t-btn t-cyan" onclick="switchMainTheme('cyan')" title="Neon Cyan"></button>
+    <button class="t-btn t-magenta" onclick="switchMainTheme('magenta')" title="Cyber Magenta"></button>
+    <button class="t-btn t-gold" onclick="switchMainTheme('gold')" title="Golden Sun"></button>
+    <button class="t-btn t-purple" onclick="switchMainTheme('purple')" title="Purple Eclipse"></button>
+  </div>
+
+  <!-- Music Equalizer widget -->
+  <div class="music-bar">
+    <i class="fas fa-compact-disc mdisc paused" id="mDisc"></i>
+    <div class="meq paused" id="mEq"><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="minfo">
+      <div class="mtitle" id="mTitle">♪ AYAN WEB GALLERY HUB — BGM</div>
+      <div class="msub">Tap PLAY to enable background music</div>
+    </div>
+    <button class="mbtn" id="mBtn"><i class="fas fa-play" id="mIcon"></i><span id="mLbl">PLAY</span></button>
+  </div>
+
+  <!-- Highly Custom VIP Profile Box -->
+  <div class="vip-card">
+    <div class="vip-head">
+      <div class="profile-wrap">
+        <div class="orbit-ring ring-1"></div>
+        <div class="orbit-ring ring-2"></div>
+        <div class="orbit-ring ring-3"></div>
+        <div class="profile-inner">
+          <img id="owner_avatar" src="/static/pic.jpg" alt="Ayan Bro" onerror="this.style.display='none'; document.getElementById('fallback_pico').style.display='inline-block'">
+          <i class="fas fa-fire pico-owner" id="fallback_pico" style="display:none;"></i>
+        </div>
+      </div>
+      <h2 class="vip-title">Aʏᴀɴ Gᴀʟʟᴇʀʏ</h2>
+      <p class="vip-sub">Core Server Portal</p>
+      
+      <!-- VIP Information Metrics -->
+      <div class="vip-details-box">
+        <div class="vip-row">
+          <span class="vip-lbl"><i class="fas fa-crown"></i> Founder Role</span>
+          <span class="vip-val" style="color:var(--acc);">VIP Owner &amp; Lead</span>
+        </div>
+        <div class="vip-row">
+          <span class="vip-lbl"><i class="fas fa-id-card"></i> Profile UID</span>
+          <span class="vip-val" style="color:var(--p);">2279016714</span>
+        </div>
+        <div class="vip-row">
+          <span class="vip-lbl"><i class="fas fa-phone-alt"></i> Phone Number</span>
+          <span class="vip-val">018447826820</span>
+        </div>
+        <div class="vip-row">
+          <span class="vip-lbl"><i class="fas fa-eye"></i> Portal Visits</span>
+          <span class="vip-val" style="color:var(--success)">{{ visit_count }} Real Loads</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Telemetry Monitoring Panel (Charge, Date, Time, OS) -->
+  <div class="telemetry-grid">
+    <div class="telemetry-card">
+      <div class="tel-ico"><i class="fas fa-clock"></i></div>
+      <div class="tel-lbl">Bangladesh Time</div>
+      <div class="tel-val" id="telemetry-time">--:--:--</div>
+    </div>
+    <div class="telemetry-card">
+      <div class="tel-ico"><i class="fas fa-calendar-day"></i></div>
+      <div class="tel-lbl">Live Date</div>
+      <div class="tel-val" id="telemetry-date">-- --- ----</div>
+    </div>
+    <div class="telemetry-card">
+      <div class="tel-ico"><i class="fas fa-mobile-alt"></i></div>
+      <div class="tel-lbl">Device / Browser</div>
+      <div class="tel-val" id="telemetry-device">Detecting...</div>
+    </div>
+    <div class="telemetry-card">
+      <div class="tel-ico" id="battery-ico"><i class="fas fa-battery-half"></i></div>
+      <div class="tel-lbl">Battery Charge</div>
+      <div class="tel-val" id="telemetry-battery">--%</div>
+    </div>
+  </div>
+
+  <div class="ticker">
+    <div class="tdot"></div>
+    <div class="ttxt">VIP NETWORK STABLE &nbsp;•&nbsp; <span>AYAN SYSTEM ONLINE</span> &nbsp;•&nbsp; TOTAL APPS: <span>5 ACTIVE</span></div>
+  </div>
+
+  <!-- Main Web Applications Grid -->
+  <div class="app-grid">
+
+    <!-- Card 1: Garena Friends Manager -->
+    <div class="app-card">
+      <div>
+        <div class="app-header">
+          <div class="app-icon"><i class="fas fa-users-cog"></i></div>
+          <div class="app-details">
+            <h3 class="app-title">Friends Manager</h3>
+            <span class="badge gold" style="font-size:0.6rem">v2.0 • Live</span>
+          </div>
+        </div>
+        <p class="app-desc">
+          আপনার ফ্রি ফায়ার অ্যাকাউন্টের সম্পূর্ণ ফ্রেন্ড ও রিকোয়েস্ট তালিকা ব্রাউজার থেকেই নিয়ন্ত্রণ করুন। সহজে রিকোয়েস্ট অ্যাকসেপ্ট, ডিক্লাইন বা ফ্রেন্ড ডিলিট করার এক অনন্য প্ল্যাটফর্ম।
+        </p>
+        <ul class="app-features">
+          <li><i class="fas fa-check-double"></i> ফ্রেন্ড রিকোয়েস্ট ফিল্টারিং ও রিমুভ</li>
+          <li><i class="fas fa-user-plus"></i> ইউআইডি সার্চ ও ইনস্ট্যান্ট ফ্রেন্ড রিকোয়েস্ট</li>
+          <li><i class="fas fa-globe"></i> ডাইনামিক রিজিয়ন লক প্রোটেকশন</li>
+        </ul>
+      </div>
+      <a href="https://ayan-website-tau.vercel.app/" target="_blank" class="app-btn app-btn-live"><i class="fas fa-external-link-alt"></i> Launch Website</a>
+    </div>
+
+    <!-- Card 2: Premium Outfit Changer OB54 -->
+    <div class="app-card">
+      <div>
+        <div class="app-header">
+          <div class="app-icon"><i class="fas fa-tshirt"></i></div>
+          <div class="app-details">
+            <h3 class="app-title">Outfit Changer</h3>
+            <span class="badge gold" style="font-size:0.6rem">OB54 • Live</span>
+          </div>
+        </div>
+        <p class="app-desc">
+          গ্যারেনার OB54 ইঞ্জিনের সাথে সামঞ্জস্যপূর্ণ প্রিমিয়াম স্কিন ও কস্টিউম চেঞ্জার সিস্টেম। আপনার প্রোফাইল কাস্টমাইজেশন ও আউটফিট পরিবর্তন করার জন্য একটি আলটিমেট প্রজেক্ট।
+        </p>
+        <ul class="app-features">
+          <li><i class="fas fa-circle-check"></i> টপ, বটম, জুতো এবং মাস্ক স্লট এডিটর</li>
+          <li><i class="fas fa-user-circle"></i> ক্যারেক্টার সুইচ ও আউটফিট প্রোটেক্ট</li>
+          <li><i class="fas fa-briefcase"></i> ব্যাকপ্যাক, অবতার ও এমোট ইনস্ট্যান্ট ইকুইপ</li>
+        </ul>
+      </div>
+      <a href="https://ayan-outfit-ob54.vercel.app/" target="_blank" class="app-btn app-btn-live"><i class="fas fa-external-link-alt"></i> Launch Website</a>
+    </div>
+
+    <!-- Card 3: VIP Emote Simulator (Coming Soon) -->
+    <div class="app-card coming-soon">
+      <div>
+        <div class="app-header">
+          <div class="app-icon"><i class="fas fa-running"></i></div>
+          <div class="app-details">
+            <h3 class="app-title" style="color:var(--g1)">Emote simulator</h3>
+            <span class="badge pink" style="font-size:0.6rem">Planned</span>
+          </div>
+        </div>
+        <p class="app-desc" style="color: #65a197;">
+          লবি বা গেমপ্লে ছাড়াই যেকোনো রেয়ার এবং লিজেন্ডারি ফ্রি ফায়ার ইমোট সরাসরি সিমুলেটরের মাধ্যমে থ্রিডি ভিউতে টেস্ট বা ইকুইপ করার চমৎকার ফিউচারিস্টিক প্রজেক্ট।
+        </p>
+        <ul class="app-features">
+          <li><i class="fas fa-clock" style="color:var(--g1)"></i> ৩ডি রেন্ডারিং ইমোট ভিউ</li>
+          <li><i class="fas fa-clock" style="color:var(--g1)"></i> অল রেয়ার কোবরা/এফএফসিএস মোড</li>
+          <li><i class="fas fa-clock" style="color:var(--g1)"></i> সাউন্ড ট্র্যাক প্লে-ব্যাক অপশন</li>
+        </ul>
+      </div>
+      <button class="app-btn app-btn-soon" disabled><i class="fas fa-hourglass-start"></i> Coming Soon</button>
+    </div>
+
+    <!-- Card 4: Guild Rank Booster (Coming Soon) -->
+    <div class="app-card coming-soon">
+      <div>
+        <div class="app-header">
+          <div class="app-icon"><i class="fas fa-shield-halved"></i></div>
+          <div class="app-details">
+            <h3 class="app-title" style="color:var(--g1)">Guild Rank Booster</h3>
+            <span class="badge pink" style="font-size:0.6rem">Planned</span>
+          </div>
+        </div>
+        <p class="app-desc" style="color: #65a197;">
+          গিল্ড টুর্নামেন্ট ডাটা অ্যানালাইটিক্স এবং মেম্বার পারফরম্যান্স ও গ্লোরি ট্র্যাকিং সিস্টেম। এটি আপনার গিল্ডের রেঙ্কিং আরও উপরে নিয়ে যেতে সাহায্য করবে।
+        </p>
+        <ul class="app-features">
+          <li><i class="fas fa-clock" style="color:var(--g1)"></i> রিয়েল-টাইম গ্লোরি কাউন্টার</li>
+          <li><i class="fas fa-clock" style="color:var(--g1)"></i> টুর্নামেন্ট অ্যাক্টিভিটি ট্র্যাকিং</li>
+          <li><i class="fas fa-clock" style="color:var(--g1)"></i> মেম্বার কন্ট্রিবিউশন স্কোরকার্ড</li>
+        </ul>
+      </div>
+      <button class="app-btn app-btn-soon" disabled><i class="fas fa-hourglass-start"></i> Coming Soon</button>
+    </div>
+
+    <!-- Card 5: Weapon Skin Unlocker (Coming Soon) -->
+    <div class="app-card coming-soon">
+      <div>
+        <div class="app-header">
+          <div class="app-icon"><i class="fas fa-crosshairs"></i></div>
+          <div class="app-details">
+            <h3 class="app-title" style="color:var(--g1)">Weapon Skin Customizer</h3>
+            <span class="badge pink" style="font-size:0.6rem">Planned</span>
+          </div>
+        </div>
+        <p class="app-desc" style="color: #65a197;">
+          ফ্রি ফায়ারের সমস্ত আপগ্রেডেবল এবং লিজেন্ডারি গান স্কিনস কাস্টমাইজ ও থ্রিডি মডেলে এক্সপ্লোর করার একটি আকর্ষণীয় গেমিং ইন্টারফেস টুল।
+        </p>
+        <ul class="app-features">
+          <li><i class="fas fa-clock" style="color:var(--g1)"></i> অল গান স্কিনস এট্রিবিউটস লিস্ট</li>
+          <li><i class="fas fa-clock" style="color:var(--g1)"></i> লবি কিল-ফিড ব্যানার এডিটর</li>
+          <li><i class="fas fa-clock" style="color:var(--g1)"></i> কাস্টম গান কম্বো বিল্ডার</li>
+        </ul>
+      </div>
+      <button class="app-btn app-btn-soon" disabled><i class="fas fa-hourglass-start"></i> Coming Soon</button>
+    </div>
+
+  </div>
+
+</div>
+
+<hr class="divider">
+<div class="foot">Crafted with <span>♥</span> by <span>AYAN</span> &nbsp;•&nbsp; VIP Hub Directory</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+// Theme Switcher Logic
+function switchMainTheme(themeName) {
+    document.body.className = '';
+    document.body.classList.add('theme-' + themeName);
+    toast("UI Theme adapted: " + themeName.toUpperCase());
+}
+
+// BGM Music Player Logic
+const audio=document.getElementById('bgAudio');let playing=false;const mDisc=document.getElementById('mDisc'),mEq=document.getElementById('mEq'),mIcon=document.getElementById('mIcon'),mLbl=document.getElementById('mLbl'),mTitle=document.getElementById('mTitle');
+function setMusic(on){playing=on;mDisc.classList.toggle('paused',!on);mEq.classList.toggle('paused',!on);mIcon.className=on?'fas fa-pause':'fas fa-play';mLbl.textContent=on?'PAUSE':'PLAY';mTitle.textContent=on?'♪ Now Playing — BGM':'♪ Music Paused';}
+document.getElementById('mBtn').onclick=()=>{if(playing){audio.pause();setMusic(false);}else audio.play().then(()=>setMusic(true)).catch(()=>{});};
+let autoTried=false;['click','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{if(!autoTried&&!playing){autoTried=true;audio.play().then(()=>setMusic(true)).catch(()=>{});}},{once:true}));
+
+function toast(msg){const t=document.createElement('div');t.className='toast';t.innerHTML='<i class="fas fa-info-circle"></i> &nbsp; '+msg;document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .4s';setTimeout(()=>t.remove(),400);},3000);}
+
+// Live Dynamic Bangladesh (BD) Time Clock & Date
+function updateBDTime() {
+    const d = new Date();
+    // Sycing UTC+6 (Bangladesh Time)
+    const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+    const bdDate = new Date(utc + (3600000 * 6));
+    
+    // Time Format
+    let hrs = bdDate.getHours();
+    let mins = bdDate.getMinutes();
+    let secs = bdDate.getSeconds();
+    let ampm = hrs >= 12 ? 'PM' : 'AM';
+    hrs = hrs % 12;
+    hrs = hrs ? hrs : 12; // 0 should be 12
+    const timeStr = (hrs < 10 ? '0' : '') + hrs + ':' + (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs + ' ' + ampm;
+    document.getElementById('telemetry-time').innerText = timeStr;
+    
+    // Date Format
+    const day = bdDate.getDate();
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = months[bdDate.getMonth()];
+    const year = bdDate.getFullYear();
+    document.getElementById('telemetry-date').innerText = day + " " + month + " " + year;
+}
+
+// Dynamic Device & Browser Detection
+function detectDevice() {
+    const ua = navigator.userAgent;
+    let device = "Computer";
+    if (/android/i.test(ua)) {
+        device = "Android Phone";
+    } else if (/iPhone|iPad|iPod/i.test(ua)) {
+        device = "iOS Device";
+    }
+    
+    // Browser parser
+    let browser = "Browser";
+    if (ua.indexOf("Chrome") > -1) browser = "Chrome";
+    else if (ua.indexOf("Firefox") > -1) browser = "Firefox";
+    else if (ua.indexOf("Safari") > -1) browser = "Safari";
+    else if (ua.indexOf("Opera") > -1 || ua.indexOf("OPR") > -1) browser = "Opera";
+    
+    document.getElementById('telemetry-device').innerText = device + " (" + browser + ")";
+}
+
+// Live HTML5 Battery Telemetry API
+function monitorBatteryCharge() {
+    if (navigator.getBattery) {
+        navigator.getBattery().then(function(battery) {
+            function updateBatteryInfo() {
+                const charge = Math.round(battery.level * 100);
+                document.getElementById('telemetry-battery').innerText = charge + "%" + (battery.charging ? " (⚡)" : "");
+                
+                // Update icon based on state
+                const batIco = document.getElementById('battery-ico');
+                if (battery.charging) {
+                    batIco.innerHTML = '<i class="fas fa-charging-station" style="color:var(--success)"></i>';
+                } else if (charge <= 20) {
+                    batIco.innerHTML = '<i class="fas fa-battery-empty" style="color:var(--err)"></i>';
+                } else if (charge <= 60) {
+                    batIco.innerHTML = '<i class="fas fa-battery-quarter" style="color:var(--dim)"></i>';
+                } else {
+                    batIco.innerHTML = '<i class="fas fa-battery-full" style="color:var(--success)"></i>';
+                }
+            }
+            updateBatteryInfo();
+            battery.addEventListener('levelchange', updateBatteryInfo);
+            battery.addEventListener('chargingchange', updateBatteryInfo);
+        });
+    } else {
+        document.getElementById('telemetry-battery').innerText = "Not Supported";
+    }
+}
+
+// Interactive Color-Shifting Falling Petals (Dynamic Custom Accent-matching)
+const canvas = document.getElementById('galaxy-canvas');
+const ctx = canvas.getContext('2d');
+let petalsArray = [];
+
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+
+class Petal {
+  constructor() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height - canvas.height;
+    this.size = Math.random() * 8 + 6;
+    this.speed = Math.random() * 1.5 + 1;
+    this.angle = Math.random() * 360;
+    this.spin = Math.random() * 1 - 0.5;
+    this.wind = Math.random() * 0.5 - 0.25;
+  }
+  draw() {
+    const activeColor = getComputedStyle(document.body).getPropertyValue('--p').trim();
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle * Math.PI / 180);
+    ctx.beginPath();
+    
+    // Procedural glowing flower petal curves
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(-this.size/2, -this.size/2, -this.size, this.size/3, 0, this.size);
+    ctx.bezierCurveTo(this.size, this.size/3, this.size/2, -this.size/2, 0, 0);
+    
+    ctx.fillStyle = activeColor.replace(')', ', 0.35)').replace('rgb', 'rgba').replace('#', 'rgba');
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = activeColor;
+    ctx.fill();
+    ctx.restore();
+  }
+  update() {
+    this.y += this.speed;
+    this.x += this.wind;
+    this.angle += this.spin;
+    
+    // Recycle petals when falling offscreen
+    if (this.y > canvas.height + 20) {
+      this.y = -20;
+      this.x = Math.random() * canvas.width;
+      this.speed = Math.random() * 1.5 + 1;
+    }
+    this.draw();
+  }
+}
+
+function init() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  petalsArray = [];
+  const petalCount = 45; // Smooth performance threshold
+  for (let i = 0; i < petalCount; i++) {
+    petalsArray.push(new Petal());
+  }
+}
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Luxury Deep Background Mesh Radial Gradient
+  let grad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, canvas.width);
+  grad.addColorStop(0, '#090422');
+  grad.addColorStop(1, '#010006');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  for (let i = 0; i < petalsArray.length; i++) {
+    petalsArray[i].update();
+  }
+  requestAnimationFrame(animate);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    init();
+    animate();
+    detectDevice();
+    monitorBatteryCharge();
+    setInterval(updateBDTime, 1000);
+    toast("Welcome to Aʏᴀɴ Gᴀʟʟᴇʀʏ Portal.");
+});
+</script>
+</body>
+</html>
+"""
+
+@app.route('/')
+def index():
+    visit_count = get_and_increment_visits()
+    return render_template_string(HTML_TEMPLATE, visit_count=visit_count)
+
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port, debug=False)
